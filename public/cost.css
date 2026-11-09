@@ -1,0 +1,4 @@
+.task-cost strong{display:block;font:500 15px 'Space Grotesk',sans-serif;letter-spacing:-.3px}
+.task-cost small{display:block;color:var(--muted);font-size:10px;margin-top:5px}
+.task-value{font:500 16px 'Space Grotesk',sans-serif;color:var(--green);font-variant-numeric:tabular-nums}
+.task-value small{display:block;font:600 10px 'DM Sans',sans-serif;color:var(--muted);margin-top:5px}
