@@ -2,3 +2,5 @@
 .task-cost small{display:block;color:var(--muted);font-size:10px;margin-top:5px}
 .task-value{font:500 16px 'Space Grotesk',sans-serif;color:var(--green);font-variant-numeric:tabular-nums}
 .task-value small{display:block;font:600 10px 'DM Sans',sans-serif;color:var(--muted);margin-top:5px}
+.no-web{display:inline-block;margin-top:8px;padding:3px 7px;border:1px solid #6b4b38;border-radius:3px;background:#2b2018;color:#e3b28c;font:600 9px 'DM Sans',sans-serif;letter-spacing:.4px}
+#web-summary.warning{color:#e3b28c}

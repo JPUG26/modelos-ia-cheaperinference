@@ -3,6 +3,7 @@ import { gunzipSync } from 'node:zlib';
 
 export const SOURCES = { aa: 'https://artificialanalysis.ai/models', ci: 'https://cheaperinference.com/' };
 export const EFFORTS = ['low', 'medium', 'high', 'xhigh', 'max'];
+export const MIN_INDEX = 30;
 
 export function payload(html) {
   return [...html.matchAll(/self\.__next_f\.push\(\[1,("(?:[^"\\]|\\.)*")\]\)/g)]
@@ -36,11 +37,11 @@ const perTaskCost = value => Number.isFinite(value) ? value
   : Number.isFinite(value?.cost?.total) ? value.cost.total : null;
 
 export function compare(models, catalog) {
-  const eligible = catalog.filter(m => m.kind === 'text' && m.priceUnit === 'M' && m.capabilities?.includes('web-search'));
+  const eligible = catalog.filter(m => m.kind === 'text' && m.priceUnit === 'M');
   const rows = [], unmatched = [];
   for (const m of models) {
     const effort = m.effort?.slug;
-    if (!EFFORTS.includes(effort) || !Number.isFinite(m.intelligenceIndex) || m.intelligenceIndex <= 32) continue;
+    if (!EFFORTS.includes(effort) || !Number.isFinite(m.intelligenceIndex) || m.intelligenceIndex <= MIN_INDEX) continue;
     // Match exact release identities, never fuzzy family names or estimated scores.
     const identities = [m.release?.slug, m.release?.name].filter(Boolean).map(normalize);
     const matches = eligible.filter(c => identities.includes(normalize(c.slug)) || identities.includes(normalize(c.name)));
@@ -57,6 +58,7 @@ export function compare(models, catalog) {
     rows.push({ id: m.slug, name: m.release.name, provider: c.provider, effort, index: m.intelligenceIndex,
       input, output, listInput: money(c.listInput), listOutput: money(c.listOutput), discount: c.savings,
       costPerTask, ciCostPerTask, valuePerDollar,
+      webSearch: c.capabilities?.includes('web-search') === true,
       context: c.contextLength, aaUrl: `https://artificialanalysis.ai/models/${encodeURIComponent(m.slug)}`,
       ciUrl: `https://cheaperinference.com/models/${encodeURIComponent(c.slug)}` });
   }

@@ -39,7 +39,7 @@ test('client calculates value from a snapshot returned by an older server', asyn
     createDocumentFragment: () => ({ append() {} }),
     createElement: () => ({ append() {}, set textContent(value) { this.text = value; } }),
   };
-  const snapshot = { rows: [{ name: 'GPT-6', provider: 'OpenAI', effort: 'low', index: 33, ciCostPerTask: 0.775, costPerTask: 1.25, input: 1, output: 2, listInput: null, listOutput: null, discount: 38, aaUrl: '', ciUrl: '' }], updatedAt: '2026-01-01T00:00:00Z' };
+  const snapshot = { rows: [{ name: 'GPT-6', provider: 'OpenAI', effort: 'low', index: 33, ciCostPerTask: 0.775, costPerTask: 1.25, input: 1, output: 2, listInput: null, listOutput: null, discount: 38, webSearch: false, aaUrl: '', ciUrl: '' }], updatedAt: '2026-01-01T00:00:00Z' };
   const context = { document, fetch: async () => ({ ok: true, json: async () => snapshot }), setInterval() {}, setTimeout() {}, Intl, Date, Math, Number, URL, Blob };
   runInNewContext(source, context);
   await new Promise(resolve => setImmediate(resolve));
@@ -47,10 +47,18 @@ test('client calculates value from a snapshot returned by an older server', asyn
   assert.equal(runInNewContext('valuePerDollar({ index: 33, ciCostPerTask: 0 })', context), null);
   assert.equal(runInNewContext('valuePerDollar({ index: 33, ciCostPerTask: null })', context), null);
 });
-test('strict threshold and web capability', () => {
-  assert.equal(compare([{ ...model, intelligenceIndex: 32 }], [catalog]).rows.length, 0);
-  assert.equal(compare([model], [{ ...catalog, capabilities: ['tool-use'] }]).rows.length, 0);
+test('strict threshold above 30', () => {
+  assert.equal(compare([{ ...model, intelligenceIndex: 30 }], [catalog]).rows.length, 0);
+  assert.equal(compare([{ ...model, intelligenceIndex: 30.01 }], [catalog]).rows.length, 1);
+  assert.equal(compare([{ ...model, intelligenceIndex: 32 }], [catalog]).rows.length, 1);
   assert.equal(compare([{ ...model, effort: undefined }], [catalog]).rows.length, 0);
+});
+test('keeps models without web search and marks the capability', () => {
+  const withoutWeb = compare([model], [{ ...catalog, capabilities: ['tool-use'] }]).rows;
+  assert.equal(withoutWeb.length, 1);
+  assert.equal(withoutWeb[0].webSearch, false);
+  assert.equal(compare([model], [catalog]).rows[0].webSearch, true);
+  assert.equal(compare([model], [{ ...catalog, capabilities: undefined }]).rows[0].webSearch, false);
 });
 test('rejects fuzzy, ambiguous, invalid-price and non-token matches', () => {
   assert.equal(compare([model], [{ ...catalog, slug: 'gpt-6-pro', name: 'gpt-6-pro' }]).rows.length, 0);

@@ -27,9 +27,11 @@ La tabla muestra modelo, proveedor, esfuerzo, Intelligence Index, precios de ent
 
 Se incluyen únicamente variantes que cumplen estos criterios:
 
-- Índice de Artificial Analysis **superior a 32**, con esfuerzo `low`, `medium`, `high`, `xhigh` o `max` publicado.
+- Índice de Artificial Analysis **superior a 30**, con esfuerzo `low`, `medium`, `high`, `xhigh` o `max` publicado.
 - Coincidencia única entre la identidad del modelo en ambas fuentes.
-- Modelo de texto con capacidad `web-search` y precios publicados por millón de tokens en el catálogo de Cheaper Inference.
+- Modelo de texto con precios publicados por millón de tokens en el catálogo de Cheaper Inference.
+
+Los modelos sin la capacidad `web-search` publicada se incluyen igualmente y llevan la marca **Sin web** en la tabla. La ausencia de esa capacidad no impide comparar índice, precios ni valor estimado, pero conviene confirmarla en la plataforma antes de depender de ella. La interfaz resume cuántas variantes tienen y no tienen búsqueda web.
 
 La aplicación consulta las fuentes al cargar y renueva los datos como máximo cada cinco minutos. Si falla una consulta posterior, muestra un aviso y conserva la última respuesta en memoria mientras el servidor continúe ejecutándose. El botón de actualización consulta al servidor, que respeta ese intervalo.
 
@@ -48,7 +50,7 @@ Una relación mayor indica más puntos de índice por dólar estimado bajo esta 
 
 - El dashboard de Cheaper Inference requiere iniciar sesión. La aplicación utiliza su catálogo público, no tarifas personalizadas de una cuenta. Los precios del catálogo están redondeados; el descuento mostrado es el publicado por la plataforma.
 - La estimación aplica el descuento uniformemente al costo de AA, incluidos componentes de caché. No constituye una cotización de Cheaper Inference ni incorpora posibles cargos adicionales por búsqueda web, herramientas u otras condiciones.
-- `web-search` indica una capacidad publicada en el catálogo, pero puede requerir activar herramientas. La presencia de un nivel de esfuerzo en AA no garantiza que ese nivel esté disponible en la API de Cheaper Inference.
+- `web-search` indica una capacidad publicada en el catálogo, pero puede requerir activar herramientas. La marca «Sin web» significa que el catálogo no la publica para ese modelo; no se asume la capacidad. La presencia de un nivel de esfuerzo en AA no garantiza que ese nivel esté disponible en la API de Cheaper Inference.
 - Las fuentes se extraen de datos públicos utilizados por sus páginas web, no de una API estable documentada para esta aplicación. Cambios en su formato, disponibilidad o condiciones de uso pueden impedir la actualización. Las identidades que no coinciden de forma inequívoca se excluyen.
 - Los datos son consultas periódicas, no un flujo en tiempo real; los precios y resultados deben confirmarse en las fuentes antes de tomar decisiones.
 

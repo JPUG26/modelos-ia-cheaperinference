@@ -22,7 +22,13 @@ function render() {
   const fragment = document.createDocumentFragment();
   for (const row of visible) {
     const tr = document.createElement('tr');
-    const name = cell(row.name, 'model'); const sub = document.createElement('small'); sub.textContent = row.provider; name.append(sub); tr.append(name);
+    const name = cell(row.name, 'model'); const sub = document.createElement('small'); sub.textContent = row.provider; name.append(sub);
+    if (row.webSearch === false) {
+      const mark = document.createElement('span'); mark.className = 'no-web'; mark.textContent = 'Sin web';
+      mark.title = 'El catálogo público no publica la capacidad web-search para este modelo.';
+      name.append(mark);
+    }
+    tr.append(name);
     const effort = cell(''); const badge = document.createElement('span'); badge.className = `badge ${row.effort}`; badge.textContent = row.effort; effort.append(badge); tr.append(effort);
     tr.append(cell(row.index.toFixed(1), 'score'));
     for (const [value, list] of [[row.input, row.listInput], [row.output, row.listOutput]]) {
@@ -46,6 +52,9 @@ function render() {
   $('count').textContent = data.rows.length;
   $('best').textContent = data.rows.length ? Math.max(...data.rows.map(r => r.index)).toFixed(1) : '--';
   $('saving').textContent = data.rows.length ? `${Math.max(...data.rows.map(r => r.discount))}%` : '--';
+  const withoutWeb = data.rows.filter(r => r.webSearch === false).length;
+  $('web-summary').className = withoutWeb ? 'warning' : '';
+  $('web-summary').textContent = `${data.rows.length - withoutWeb} con búsqueda web · ${withoutWeb} sin búsqueda web`;
   $('updated').textContent = new Date(data.updatedAt).toLocaleString('es', { dateStyle: 'short', timeStyle: 'medium' });
   $('export').disabled = !visible.length;
 }
@@ -57,7 +66,7 @@ async function load() {
     // An already-running server may still return snapshots from before this field was added.
     data = { ...result, rows: result.rows.map(row => ({ ...row, valuePerDollar: valuePerDollar(row) })) }; render();
     $('status').className = result.stale ? 'warning' : 'success';
-    $('status').textContent = result.stale ? `Datos anteriores. No se pudo actualizar: ${result.error}` : `Fuentes verificadas: ${result.aaCount} evaluaciones AA y ${result.ciCount} modelos CI. Solo se muestran coincidencias con web-search e índice > 32. Precios públicos redondeados.`;
+    $('status').textContent = result.stale ? `Datos anteriores. No se pudo actualizar: ${result.error}` : `Fuentes verificadas: ${result.aaCount} evaluaciones AA y ${result.ciCount} modelos CI. Solo se muestran coincidencias con índice > 30. Los modelos sin búsqueda web publicada llevan la marca «Sin web». Precios públicos redondeados.`;
   } catch (error) {
     $('status').className = 'warning'; $('status').textContent = `${data ? 'Se conserva la última consulta. ' : 'No se pudieron obtener datos. '}${error.message} Reintento automático en 5 minutos.`;
   } finally { loading = false; $('refresh').disabled = false; $('refresh').textContent = 'Actualizar datos ↻'; }
@@ -66,7 +75,7 @@ $('search').addEventListener('input', render);
 for (const id of ['effort', 'sort']) $(id).addEventListener('change', render);
 $('refresh').addEventListener('click', load);
 $('export').addEventListener('click', () => {
-  const rows = [['Modelo', 'Proveedor', 'Esfuerzo', 'AA Index', 'Entrada USD/1M', 'Salida USD/1M', 'Costo por tarea AA USD (lista)', 'Costo por tarea CI estimado USD', 'AA Index / USD por tarea CI estimado', 'Descuento publicado %', 'Consulta UTC', 'Fuente AA', 'Fuente CI'], ...visible.map(r => [r.name, r.provider, r.effort, r.index, r.input, r.output, r.costPerTask, r.ciCostPerTask, r.valuePerDollar, r.discount, data.updatedAt, r.aaUrl, r.ciUrl])];
+  const rows = [['Modelo', 'Proveedor', 'Esfuerzo', 'Búsqueda web publicada', 'AA Index', 'Entrada USD/1M', 'Salida USD/1M', 'Costo por tarea AA USD (lista)', 'Costo por tarea CI estimado USD', 'AA Index / USD por tarea CI estimado', 'Descuento publicado %', 'Consulta UTC', 'Fuente AA', 'Fuente CI'], ...visible.map(r => [r.name, r.provider, r.effort, r.webSearch === false ? 'No' : 'Sí', r.index, r.input, r.output, r.costPerTask, r.ciCostPerTask, r.valuePerDollar, r.discount, data.updatedAt, r.aaUrl, r.ciUrl])];
   const csv = rows.map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\r\n');
   const url = URL.createObjectURL(new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' }));
   const a = document.createElement('a'); a.href = url; a.download = 'prisma-modelos.csv'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
